@@ -1,0 +1,19 @@
+
+
+{
+	"sProcessing":   "Đang xử lý...",
+	"sLengthMenu":   "Hiện thị _MENU_ bản ghi",
+	"sZeroRecords":  "Không tìm thấy dữ liệu",
+	"sInfo":         "Hiển thị _START_ đến _END_ trong _TOTAL_ bản ghi",
+	"sInfoEmpty":    "Chưa có dữ liệu",
+	"sInfoFiltered": "(được lọc từ _MAX_ mục)",
+	"sInfoPostFix":  "",
+	"sSearch":       "Tìm kiếm:",
+	"sUrl":          "",
+	"oPaginate": {
+		"sFirst":    " << ",
+		"sPrevious": " < ",
+		"sNext":     " > ",
+		"sLast":     " >> "
+	}
+}

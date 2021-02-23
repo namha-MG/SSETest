@@ -1,0 +1,295 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+<div id="formview">
+    <div class="main-body">
+        <div class="page-wrapper">
+            <!-- Page-body start -->
+            <div class="page-body">
+                <div class="card card-outline card-primary">
+                    <div id="search-box" class="card-header ">
+                        <div class="row align-items-center">
+                            <div class="col-12">
+                                <div class="form-group">
+                                    <h4>Doanh số</h4>
+                                </div>
+                                <div class="search-box row">
+                                    <div class="form-group col-4">
+                                        @Html.Label("Ngày")
+                                        <input type="text" name="ngay" id="ngay" class="form-control"/>
+                                    </div>
+                                    <div class="form-group col-4">
+                                        @Html.Label("Khách hàng")
+                                        <input type="text" name="ten" id="tenkh" class="form-control"/>
+                                    </div>
+                                    <div class="col-md-4 text-right">
+                                        <button class="btn btn-default" id="btnTimKiem"><i class="fa fa-search"></i> Tìm kiếm</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class=" row">
+                            <div class="table-responsive">
+                                <table id="tblDoanhSo" class="display table table-bordered" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th class="bg-info text-center">Thao tác</th>
+                                            <th class="bg-info text-center">STT</th>
+                                            <th class="bg-info text-center">Ngày</th>
+                                            <th class="bg-info text-center">Tên khách hàng</th>
+                                            <th class="bg-info text-center">Doanh số</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    th {
+        white-space: nowrap;
+    }
+</style>
+<script>
+        $('input[name="ngay"]').daterangepicker({
+            opens: 'left',
+            locale: vn_daterangepicker
+        });
+        var tablePT = $("#tblDoanhSo").DataTable({
+            serverSide: true,
+            processing: true,
+            ajax: {
+                url: "/Home/_DanhSachDoanhSo",
+                type: "POST",
+                data: function (data) {
+                    data.ngay = $("#ngay").val();
+                    data.ten = $("#tenkh").val();
+                }
+            },
+            searching: false,                                   // disable search box
+            order: [// default sort
+                [1, "asc"]
+            ],
+            columns: [
+                {
+                    orderable: false,
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        return `<div class="dropdown grid-command thaotac">
+                                <div class="sett" data-toggle="dropdown"></div>
+                                <ul class="dropdown-menu sett_dropdown-caret">
+                                    <li class="pop_arrow_new"></li>
+                                    <li onclick="ThemMoiDoanhSo('${data}')"><span><i class="fas fa-edit"></i>Hiệu chỉnh</span></li>
+                                    <li onclick="XoaDoanhSo('${data}')"><span><i class="fas fa-edit"></i>Xóa</span></li>
+                                </ul>
+                            </div> `
+                    }, className: "text-center"
+                },
+                {
+                    width: "5%",
+                    data: "id",
+                    render: function (data, type, row, meta) {
+                        var rowNum = meta.row + meta.settings._iDisplayStart + 1;
+                        return rowNum;
+                    },
+                    className: "text-center"
+                },
+                {
+                    width: "30%",
+                    data: "ngay_ct",
+                    className: "text-left",
+                    render: function (data, type, row, meta) {
+                        return moment(data).format('DD/MM/YYYY')
+                    }
+                },
+                {
+                    width: "40%",
+                    data: "ten_kh",
+                    className: "text-center"
+                },
+                {
+                    width: "25%",
+                    data: "doanh_so",
+                    className: "text-center"
+                }
+
+            ],
+            buttons: [
+                {
+                    text: '<i class="fas fa-clipboard-list"></i>Thêm mới',
+                    className: 'btn btn-outline-primary rounded btn-sm  mr-2',
+                    init: function (api, node, config) {
+                        $(node).removeClass('btn-secondary buttons-excel buttons-html5')
+                    },
+                    action: function (e, dt, node, config) {
+                        ThemMoiDoanhSo()
+                    }
+                },
+                {
+                    text: '<i class="far fa-chart-bar"></i>Xem biểu đồ',
+                    className: 'btn btn-outline-primary rounded btn-sm  mr-2',
+                    init: function (api, node, config) {
+                        $(node).removeClass('btn-secondary buttons-excel buttons-html5')
+                    },
+                    action: function (e, dt, node, config) {
+                        ShowChart()
+                    }
+                }
+            ]
+        });
+        $("#btnTimKiem").unbind('click').click(function () {
+            tablePT.page(1).ajax.reload();
+        });
+    function ThemMoiDoanhSo(id) {
+        $.ajax({
+            url: "/Home/_ThongTinDoanhSo/" + id,
+            dataType: "html",
+            success: function (data) {
+                var $popup = showDialog({
+                    id: 'dialogDoanhSo',
+                    content: data,
+                    width: 500
+                })
+            }
+        })
+    }
+    function ShowChart() {
+        $.ajax({
+            url: "/Home/_DialogChart/",
+            dataType: "html",
+            success: function (data) {
+                var $popup = showDialog({
+                    id: 'dialogChart',
+                    content: data,
+                    width: 1200
+                })
+            }
+        })
+    }
+    function XoaDoanhSo(id) {
+                var dialog = showConfirmDialog("Bạn có chắc chắn muốn xóa doanh số này không?");
+                dialog.find(".cmd-save").click(function () {
+                    $.ajax({
+                        url: "/Home/XoaDoanhSo/",
+                        method: 'post',
+                        data: {
+                            id: id
+                        },
+                        dataType: 'json',
+                        success: function (data) {
+                            if (data) {
+                                toastr.success('Xóa thành công!')
+                                $("#confirmPopup").modal("hide");
+                                $("#tblDoanhSo").DataTable().ajax.reload()
+                            } else {
+                                toastr.error("Có lỗi hệ thống xảy ra");
+                            }
+                        },
+                        error: function (data) {
+                            toastr.error(data.message);
+                        }
+                    })
+                })
+    }
+    /////////////////////////////////////////////////////////////////////////////////
+    function showDialog(options) {
+        var defaultOptions = {
+            id: 'popup',
+            url: '',
+            content: '',
+            width: 500
+        };
+        options = $.extend(defaultOptions, options);
+
+        var popup = $('#' + options.id);
+        if (!popup.length) {
+            $('body').append('<div class="modal fade" id="' + options.id + '"><div class="modal-dialog modal-dialog-centered" style="max-width:' + options.width + 'px"></div></div>');
+            popup = $('#' + options.id);
+        }
+        if (options.url != '') {
+            popup.find(".modal-dialog").load(options.url);
+        }
+        if (options.content != '') {
+            popup.find(".modal-dialog").html(options.content);
+        }
+        popup.modal({ backdrop: 'static', keyboard: false });
+        return popup;
+    }
+    function showConfirmDialog(content) {
+        return showDialogCustom({
+            id: 'confirmPopup',
+            title: 'Xác nhận',
+            type: 'warning',
+            content: content,
+            textYes: 'Tiếp tục'
+        });
+    }
+    function showDialogCustom(options) {
+        var defaultOptions = {
+            id: 'popup',
+            title: 'Thông tin',
+            type: 'default',
+            overlay: false,
+            url: '',
+            content: '',
+            width: 500,
+            height: null,
+            textYes: 'Ghi lại',
+            textNo: 'Đóng'
+        };
+        options = $.extend(defaultOptions, options);
+
+        // remove old dialog if exists
+        var popup = $('#' + options.id);
+        if (popup.length) {
+            popup.remove();
+        }
+
+        // create new dialog
+        $('body').append('<div class="modal fade" id="' + options.id + '"><div class="modal-dialog modal-dialog-centered" style="max-width:' + options.width + 'px"></div></div>');
+        popup = $('#' + options.id);
+        popup.find('.modal-dialog').append('<div class="modal-content"></div>');
+        var content = popup.find('.modal-content');
+
+        // overlay
+        if (options.overlay) {
+            content.append(`<div class="overlay d-flex justify-content-center align-items-center">
+                <i class= "fas fa-2x fa-sync fa-spin" ></i></div>`);
+        }
+
+        // init header
+        content.append(`<div class="modal-header bg-` + options.type + `">
+                            <h4 class="modal-title">` + options.title + `</h4>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Đóng">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>`);
+
+        //init body
+        content.append(`<div class="modal-body" ` + (options.height != null ? (`style="max-height:` + options.height + `px;overflow-y:auto"`) : ``) + `></div>`);
+        if (options.url != '') {
+            content.find(".modal-body").load(options.url);
+        }
+        if (options.content != '') {
+            content.find(".modal-body").html(options.content);
+        }
+
+        var htmlYesButton = options.textYes == null ? "" : (`<button type="button" class="btn btn-primary cmd-save btn-sm">` + options.textYes + `</button>`);
+        var htmlNoButton = options.textNo == null ? "" : (`<button type="button" class="btn btn-default cmd-close btn-sm" data-dismiss="modal">` + options.textNo + `</button>`);
+
+        //init footer
+        content.append(`<div class="modal-footer">
+                            ${htmlNoButton}
+                            ${htmlYesButton}
+                        </div>`);
+        popup.modal({ backdrop: 'static', keyboard: false });
+        return popup;
+    }
+
+</script>

@@ -1,0 +1,78 @@
+﻿@model  TestSSE.Models.tbl_Doanh_so
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "formDoanhSo" }))
+{
+    @Html.HiddenFor(x => x.id)
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Thông tin doanh số</h3>
+            <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+        <div class="modal-body">
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div>
+                            @Html.Label("Ngày:")
+                        </div>
+                        @Html.TextBox("ngay", (Model.ngay_ct == null ? DateTime.Now.ToShortDateString() : Model.ngay_ct.ToString()), new { @class = "form-control", @disabled = true })
+                    </div>
+                    <div class="col-md-6">
+                        <div>
+                            @Html.Label("Tên khách hàng:")
+                        </div>
+                        @Html.TextBox("ten_kh", Model.ten_kh, new { @class = "form-control" })
+                    </div>
+                    <div class="col-md-6">
+                        <div>
+                            @Html.Label("Doanh số:")
+                        </div>
+                        @Html.TextBox("doanh_so", (Model.doanh_so == null ? null : Model.doanh_so), new { @class = "form-control filterme" })
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="GhiLaiDoanhSo(this)" id="btnGL">Ghi lại</button>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+        </div>
+    </div>
+}
+<script>
+    $('.filterme').keypress(function (eve) {
+        if ((eve.which != 46 || $(this).val().indexOf('.') != -1) && (eve.which < 48 || eve.which > 57) || (eve.which == 46 && $(this).caret().start == 0)) {
+            eve.preventDefault();
+        }
+
+        $('.filterme').keyup(function (eve) {
+            if ($(this).val().indexOf('.') == 0) {
+                $(this).val($(this).val().substring(1));
+            }
+        });
+    });
+    function GhiLaiDoanhSo(e) {
+        $form = $(e).closest('#formDoanhSo');
+        var formData = new FormData($form[0]);
+        if ($form.valid() == false) return false;
+        $.ajax({
+            url: '/Home/LuuThongTin',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+            success: function (data) {
+                if (data.data) {
+                    toastr.success('Lưu thông tin doanh số thành công');
+                    $("#dialogDoanhSo").modal("hide");
+                    $("#tblDoanhSo").DataTable().ajax.reload();
+                }
+                else {
+                    toastr.error("Có lỗi hệ thống xảy ra");
+                }
+            },
+            error: function (data) {
+                toastr.error(data.message);
+            }
+        })
+    }
+</script>
